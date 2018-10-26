@@ -203,6 +203,12 @@ public class ApplicationClasses {
          * Is this class compiled
          */
         boolean compiled;
+        
+        /**
+         * is this class freezed (already ehnanced and not able to be recompiled/ehnanced)
+         */
+        public boolean freezed = false;
+        
         /**
          * Signatures checksum
          */
@@ -225,6 +231,9 @@ public class ApplicationClasses {
          * Need to refresh this class !
          */
         public final void refresh() {
+            if (freezed)
+                return;
+            
             if (this.javaFile != null) {
                 this.javaSource = this.javaFile.contentAsString();
             }
@@ -262,6 +271,11 @@ public class ApplicationClasses {
                 } catch (Exception e) {
                     // nop
                 }
+                
+                // if freezed don't apply enhance                
+                if (this.freezed)
+                    shouldEnhance = false;
+                
 
                 if (shouldEnhance) {
                     Play.pluginCollection.enhance(this);
@@ -311,6 +325,9 @@ public class ApplicationClasses {
          * @return the bytes that comprise the class file
          */
         public byte[] compile() {
+            if (freezed && this.javaByteCode != null)
+                return this.javaByteCode;
+                
             long start = System.currentTimeMillis();
             Play.classes.compiler.compile(new String[] { this.name });
 
